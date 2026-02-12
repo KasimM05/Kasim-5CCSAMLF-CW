@@ -14,19 +14,6 @@ RANDOM_STATE = 42
 N_SPLITS = 5
 SCORING = "r2"
 
-# Locked params from the best run so far (used when tuning is skipped).
-LOCKED_FINAL_PARAMS = {
-    "learning_rate": 0.039,
-    "max_iter": 300,
-    "max_depth": 3,
-    "max_leaf_nodes": 255,
-    "min_samples_leaf": 10,
-    "l2_regularization": 1.0,
-}
-
-# Keep enabled while iterating; set to False for fast submission generation.
-ENABLE_TUNING = True
-
 
 def resolve_data_path(filename: str) -> Path:
     candidates = [Path("data") / filename, Path(filename)]
@@ -133,20 +120,6 @@ def make_tighter_distributions(best_params: dict) -> dict:
     }
 
 
-def make_pipeline_with_model(model: HistGradientBoostingRegressor) -> Pipeline:
-    return Pipeline(
-        steps=[
-            ("preprocessor", build_ordinal_preprocessor()),
-            ("model", model),
-        ]
-    )
-
-
-def eval_cv(pipeline: Pipeline, X: pd.DataFrame, y: pd.Series, cv: KFold) -> tuple[float, float, list[float]]:
-    scores = cross_val_score(pipeline, X, y, cv=cv, scoring=SCORING)
-    return float(scores.mean()), float(scores.std()), [float(s) for s in scores]
-
-
 def main() -> None:
     train_path = resolve_data_path("CW1_train.csv")
     test_path = resolve_data_path("CW1_test.csv")
@@ -167,148 +140,85 @@ def main() -> None:
 
     X_test = test_df[X.columns].copy()
 
+    pipeline = Pipeline(
+        steps=[
+            ("preprocessor", build_ordinal_preprocessor()),
+            ("model", HistGradientBoostingRegressor(random_state=RANDOM_STATE)),
+        ]
+    )
+
     cv = KFold(n_splits=N_SPLITS, shuffle=True, random_state=RANDOM_STATE)
 
-    baseline_pipeline = make_pipeline_with_model(
-        HistGradientBoostingRegressor(random_state=RANDOM_STATE)
-    )
-    baseline_mean, baseline_std, baseline_scores = eval_cv(baseline_pipeline, X, y, cv)
+    baseline_scores = cross_val_score(pipeline, X, y, cv=cv, scoring=SCORING)
     print("Baseline HistGradientBoosting")
-    print("Fold R^2:", [round(s, 5) for s in baseline_scores])
-    print(f"Mean R^2: {baseline_mean:.5f} (+/- {baseline_std:.5f})")
-    print("-" * 40)
-
-    results_rows = [
-        {
-            "stage": "baseline",
-            "cv_mean_r2": baseline_mean,
-            "cv_std_r2": baseline_std,
-            "params": "default",
-        }
-    ]
-
-    selected_pipeline = None
-    selected_mean = None
-    selected_stage = None
-
-    if ENABLE_TUNING:
-        stage1_distributions = {
-            "model__learning_rate": [0.01, 0.03, 0.05, 0.08, 0.1, 0.15],
-            "model__max_iter": [200, 300, 500, 800, 1200],
-            "model__max_depth": [None, 3, 5, 8, 12],
-            "model__max_leaf_nodes": [15, 31, 63, 127, 255],
-            "model__min_samples_leaf": [10, 20, 30, 50, 80],
-            "model__l2_regularization": [0.0, 1e-4, 1e-3, 1e-2, 1e-1, 1.0],
-        }
-
-        stage1 = RandomizedSearchCV(
-            estimator=baseline_pipeline,
-            param_distributions=stage1_distributions,
-            n_iter=35,
-            scoring=SCORING,
-            cv=cv,
-            n_jobs=-1,
-            random_state=RANDOM_STATE,
-            refit=True,
-            verbose=1,
-        )
-        stage1.fit(X, y)
-
-        print("Stage 1 best params:")
-        print(stage1.best_params_)
-        print(f"Stage 1 best CV Mean R^2: {stage1.best_score_:.5f}")
-        print("-" * 40)
-
-        results_rows.append(
-            {
-                "stage": "stage1",
-                "cv_mean_r2": float(stage1.best_score_),
-                "cv_std_r2": None,
-                "params": str(stage1.best_params_),
-            }
-        )
-
-        stage2_distributions = make_tighter_distributions(stage1.best_params_)
-        total_stage2_combos = prod(len(v) for v in stage2_distributions.values())
-        stage2_n_iter = min(24, total_stage2_combos)
-
-        stage2 = RandomizedSearchCV(
-            estimator=baseline_pipeline,
-            param_distributions=stage2_distributions,
-            n_iter=stage2_n_iter,
-            scoring=SCORING,
-            cv=cv,
-            n_jobs=-1,
-            random_state=RANDOM_STATE + 1,
-            refit=True,
-            verbose=1,
-        )
-        stage2.fit(X, y)
-
-        print("Stage 2 best params:")
-        print(stage2.best_params_)
-        print(f"Stage 2 best CV Mean R^2: {stage2.best_score_:.5f}")
-        print("-" * 40)
-
-        results_rows.append(
-            {
-                "stage": "stage2",
-                "cv_mean_r2": float(stage2.best_score_),
-                "cv_std_r2": None,
-                "params": str(stage2.best_params_),
-            }
-        )
-
-        if stage2.best_score_ > stage1.best_score_:
-            selected_search = stage2
-            selected_stage = "stage2"
-        else:
-            selected_search = stage1
-            selected_stage = "stage1"
-
-        selected_pipeline = selected_search.best_estimator_
-        selected_mean = float(selected_search.best_score_)
-
-    else:
-        print("Tuning is disabled. Using locked final parameters.")
-        final_model = HistGradientBoostingRegressor(
-            random_state=RANDOM_STATE, **LOCKED_FINAL_PARAMS
-        )
-        selected_pipeline = make_pipeline_with_model(final_model)
-        selected_mean, selected_std, _ = eval_cv(selected_pipeline, X, y, cv)
-        selected_stage = "locked_final"
-
-        results_rows.append(
-            {
-                "stage": selected_stage,
-                "cv_mean_r2": selected_mean,
-                "cv_std_r2": selected_std,
-                "params": str(LOCKED_FINAL_PARAMS),
-            }
-        )
-
-    print(f"Selected model from: {selected_stage}")
-    print(f"Selected CV Mean R^2: {selected_mean:.5f}")
-
-    # Robustness check with a different CV split seed.
-    robust_cv = KFold(n_splits=N_SPLITS, shuffle=True, random_state=7)
-    robust_mean, robust_std, robust_scores = eval_cv(selected_pipeline, X, y, robust_cv)
-    print("Robustness check (new CV split seed = 7)")
-    print("Fold R^2:", [round(s, 5) for s in robust_scores])
-    print(f"Mean R^2: {robust_mean:.5f} (+/- {robust_std:.5f})")
-    print("-" * 40)
-
-    results_rows.append(
-        {
-            "stage": "robustness_check_seed7",
-            "cv_mean_r2": robust_mean,
-            "cv_std_r2": robust_std,
-            "params": "selected_pipeline",
-        }
+    print("Fold R^2:", [round(float(s), 5) for s in baseline_scores])
+    print(
+        f"Mean R^2: {baseline_scores.mean():.5f} (+/- {baseline_scores.std():.5f})"
     )
+    print("-" * 40)
 
-    selected_pipeline.fit(X, y)
-    yhat_test = selected_pipeline.predict(X_test)
+    stage1_distributions = {
+        "model__learning_rate": [0.01, 0.03, 0.05, 0.08, 0.1, 0.15],
+        "model__max_iter": [200, 300, 500, 800, 1200],
+        "model__max_depth": [None, 3, 5, 8, 12],
+        "model__max_leaf_nodes": [15, 31, 63, 127, 255],
+        "model__min_samples_leaf": [10, 20, 30, 50, 80],
+        "model__l2_regularization": [0.0, 1e-4, 1e-3, 1e-2, 1e-1, 1.0],
+    }
+
+    stage1 = RandomizedSearchCV(
+        estimator=pipeline,
+        param_distributions=stage1_distributions,
+        n_iter=35,
+        scoring=SCORING,
+        cv=cv,
+        n_jobs=-1,
+        random_state=RANDOM_STATE,
+        refit=True,
+        verbose=1,
+    )
+    stage1.fit(X, y)
+
+    print("Stage 1 best params:")
+    print(stage1.best_params_)
+    print(f"Stage 1 best CV Mean R^2: {stage1.best_score_:.5f}")
+    print("-" * 40)
+
+    stage2_distributions = make_tighter_distributions(stage1.best_params_)
+    total_stage2_combos = prod(len(v) for v in stage2_distributions.values())
+    stage2_n_iter = min(24, total_stage2_combos)
+
+    stage2 = RandomizedSearchCV(
+        estimator=pipeline,
+        param_distributions=stage2_distributions,
+        n_iter=stage2_n_iter,
+        scoring=SCORING,
+        cv=cv,
+        n_jobs=-1,
+        random_state=RANDOM_STATE + 1,
+        refit=True,
+        verbose=1,
+    )
+    stage2.fit(X, y)
+
+    print("Stage 2 best params:")
+    print(stage2.best_params_)
+    print(f"Stage 2 best CV Mean R^2: {stage2.best_score_:.5f}")
+    print("-" * 40)
+
+    if stage2.best_score_ > stage1.best_score_:
+        chosen_search = stage2
+        chosen_stage = "stage2"
+    else:
+        chosen_search = stage1
+        chosen_stage = "stage1"
+
+    print(f"Selected model from: {chosen_stage}")
+    print(f"Selected CV Mean R^2: {chosen_search.best_score_:.5f}")
+
+    best_pipeline = chosen_search.best_estimator_
+    best_pipeline.fit(X, y)
+    yhat_test = best_pipeline.predict(X_test)
 
     output_dir = Path("submissions")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -317,10 +227,6 @@ def main() -> None:
     out_path = output_dir / "CW1_submission_K24060083.csv"
     submission.to_csv(out_path, index=False)
     print(f"Saved submission: {out_path}")
-
-    summary_path = output_dir / "tuning_summary.csv"
-    pd.DataFrame(results_rows).to_csv(summary_path, index=False)
-    print(f"Saved tuning summary: {summary_path}")
 
 
 if __name__ == "__main__":
