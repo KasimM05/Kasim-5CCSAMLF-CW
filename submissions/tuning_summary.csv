@@ -1,0 +1,5 @@
+stage,cv_mean_r2,cv_std_r2,params
+baseline,0.4559942548539683,0.021739575950268396,default
+stage1,0.4714449974560429,,"{'model__min_samples_leaf': 10, 'model__max_leaf_nodes': 255, 'model__max_iter': 300, 'model__max_depth': 3, 'model__learning_rate': 0.03, 'model__l2_regularization': 0.1}"
+stage2,0.47177970637453726,,"{'model__min_samples_leaf': 10, 'model__max_leaf_nodes': 255, 'model__max_iter': 300, 'model__max_depth': 3, 'model__learning_rate': 0.039, 'model__l2_regularization': 1.0}"
+robustness_check_seed7,0.4728462480828224,0.015246930421827893,selected_pipeline
