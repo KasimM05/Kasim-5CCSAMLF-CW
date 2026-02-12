@@ -1,53 +1,75 @@
 # CW1 Regression Challenge
 
-This repository contains my solution for Coursework 1, a data science regression challenge.
+This repository contains a full tabular regression workflow for Coursework 1.
 
-The objective is to train a regression model to predict the variable `outcome` from a tabular dataset and to generate predictions for a held-out test set. Model performance is evaluated using out-of-sample R².
+The goal is to predict `outcome` from the provided training data and generate a one-column submission file for the held-out test set.
 
-## Repository Structure
+## Project Structure
 
-├── train_and_submit.py # Main training and submission script
-├── eval_script.py # Provided baseline script (unchanged)
-├── data/
-│ ├── CW1_train.csv
-│ └── CW1_test.csv
-├── report/
-│ ├── report.tex
-│ └── figures/
-├── requirements.txt
+```text
+.
+|-- build_submission.py
+|-- CW1_eval_script.py
+|-- requirements.txt
+|-- README.md
+|-- data/
+|   |-- CW1_train.csv
+|   `-- CW1_test.csv
+|-- submissions/
+|   |-- CW1_submission_K24060083.csv
+|   `-- tuning_summary.csv
+|-- notebooks/
+|   `-- eda.ipynb
+`-- report/
+    |-- report.tex
+    `-- figures/
+```
 
+## Environment Setup
 
-## How to Run
+1. Create and activate a virtual environment (recommended).
 
-1. Install dependencies:
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+2. Install dependencies.
+
 ```bash
 pip install -r requirements.txt
 ```
-2 Generate predictions:
 
-python train_and_submit.py
+## How To Run
 
-This will produce a submission file:
+Run the training + tuning + submission pipeline:
 
-CW1_submission_KXXXXXXX.csv
+```bash
+python build_submission.py
+```
 
-Method Overview
+## What The Script Does
 
-Exploratory data analysis (EDA)
+`build_submission.py` performs the full end-to-end process:
 
-Preprocessing using a unified pipeline:
+1. Loads data from `data/CW1_train.csv` and `data/CW1_test.csv`.
+2. Builds a leakage-safe sklearn `Pipeline`:
+   - numeric median imputation
+   - categorical most-frequent imputation
+   - categorical ordinal encoding
+   - `HistGradientBoostingRegressor`
+3. Computes baseline 5-fold CV R2.
+4. Runs stage-1 broad hyperparameter search (`RandomizedSearchCV`).
+5. Runs stage-2 tighter search around stage-1 best parameters.
+6. Selects the better stage automatically.
+7. Runs a robustness check with a different CV random seed.
+8. Fits the selected pipeline on all training rows.
+9. Predicts test-set outcomes and saves submission.
+10. Saves a tuning summary table.
 
-Median imputation for numerical features
+## Output Files
 
-One-hot encoding for categorical features
+After each run, the submission file is generated and can be found in:
 
-Model selection via K-fold cross-validation
-
-Hyperparameter tuning
-
-Final training on the full dataset and test prediction generation
-
-The file eval_script.py is included as reference for submission format but is not used directly in the final pipeline.
-
-Author
-Kasim Morsel, k24060083
+- `submissions/CW1_submission.csv`
+  - Single-column CSV: `yhat`
