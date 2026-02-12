@@ -224,10 +224,11 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     submission = pd.DataFrame({"yhat": yhat_test})
-    out_path = output_dir / "CW1_submission.csv"
+    out_path = output_dir / "CW1_submission_K24060083.csv"
     submission.to_csv(out_path, index=False)
     print(f"Saved submission: {out_path}")
 
 
 if __name__ == "__main__":
     main()
+

@@ -1,6 +1,6 @@
 # CW1 Regression Challenge
 
-This repository contains a full tabular regression workflow for Coursework 1.
+This repository contains a tabular regression workflow for Coursework 1.
 
 The goal is to predict `outcome` from the provided training data and generate a one-column submission file for the held-out test set.
 
@@ -16,8 +16,7 @@ The goal is to predict `outcome` from the provided training data and generate a 
 |   |-- CW1_train.csv
 |   `-- CW1_test.csv
 |-- submissions/
-|   |-- CW1_submission_K24060083.csv
-|   `-- tuning_summary.csv
+|   `-- CW1_submission_K24060083.csv
 |-- notebooks/
 |   `-- eda.ipynb
 `-- report/
@@ -62,14 +61,18 @@ python build_submission.py
 4. Runs stage-1 broad hyperparameter search (`RandomizedSearchCV`).
 5. Runs stage-2 tighter search around stage-1 best parameters.
 6. Selects the better stage automatically.
-7. Runs a robustness check with a different CV random seed.
-8. Fits the selected pipeline on all training rows.
-9. Predicts test-set outcomes and saves submission.
-10. Saves a tuning summary table.
+7. Fits the selected pipeline on all training rows.
+8. Predicts test-set outcomes and saves submission.
 
-## Output Files
+## Output File
 
-After each run, the submission file is generated and can be found in:
+After each run:
 
-- `submissions/CW1_submission.csv`
+- `submissions/CW1_submission_K24060083.csv`
   - Single-column CSV: `yhat`
+
+## Notes On Evaluation
+
+- The provided test file does not include true outcomes.
+- Local performance is estimated using cross-validation R2 on training data.
+- Final performance is determined externally when the submission is evaluated with hidden outcomes.
