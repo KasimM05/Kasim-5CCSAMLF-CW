@@ -8,6 +8,7 @@ The goal is to predict `outcome` from the provided training data and generate a 
 
 ```text
 .
+|-- compare_models.py
 |-- build_submission.py
 |-- requirements.txt
 |-- README.md
@@ -23,7 +24,7 @@ The goal is to predict `outcome` from the provided training data and generate a 
 |   `-- eda.ipynb
 |-- submissions/
 `-- report/
-    |-- report.tex
+    |-- main.tex
     `-- figures/
 ```
 
