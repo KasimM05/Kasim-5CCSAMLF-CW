@@ -1,6 +1,6 @@
 # CW1 Regression Challenge
 
-This repository contains a full tabular regression workflow for Coursework 1.
+This repository contains a tabular regression workflow for Coursework 1.
 
 The goal is to predict `outcome` from the provided training data and generate a one-column submission file for the held-out test set.
 
@@ -8,20 +8,23 @@ The goal is to predict `outcome` from the provided training data and generate a 
 
 ```text
 .
+|-- compare_models.py
 |-- build_submission.py
-|-- CW1_eval_script.py
 |-- requirements.txt
 |-- README.md
+|-- src/
+|   |-- __init__.py
+|   |-- config.py
+|   |-- data_io.py
+|   `-- pipeline_factory.py
 |-- data/
 |   |-- CW1_train.csv
 |   `-- CW1_test.csv
-|-- submissions/
-|   |-- CW1_submission_K24060083.csv
-|   `-- tuning_summary.csv
 |-- notebooks/
 |   `-- eda.ipynb
+|-- submissions/
 `-- report/
-    |-- report.tex
+    |-- main.tex
     `-- figures/
 ```
 
@@ -40,36 +43,31 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## How To Run
+## Run the script to generate submission: 
 
-Run the training + tuning + submission pipeline:
+This is the CW submission path.
 
 ```bash
 python build_submission.py
 ```
 
-## What The Script Does
+Output:
 
-`build_submission.py` performs the full end-to-end process:
+- `submissions/CW1_submission_K24060083.csv`
+- single column: `yhat`
 
-1. Loads data from `data/CW1_train.csv` and `data/CW1_test.csv`.
-2. Builds a leakage-safe sklearn `Pipeline`:
-   - numeric median imputation
-   - categorical most-frequent imputation
-   - categorical ordinal encoding
-   - `HistGradientBoostingRegressor`
-3. Computes baseline 5-fold CV R2.
-4. Runs stage-1 broad hyperparameter search (`RandomizedSearchCV`).
-5. Runs stage-2 tighter search around stage-1 best parameters.
-6. Selects the better stage automatically.
-7. Runs a robustness check with a different CV random seed.
-8. Fits the selected pipeline on all training rows.
-9. Predicts test-set outcomes and saves submission.
-10. Saves a tuning summary table.
+## Run model comparison (for report evidence)
 
-## Output Files
+Use this to generate a cross-validated comparison table across multiple model families.
 
-After each run, the submission file is generated and can be found in:
+```bash
+python compare_models.py
+```
 
-- `submissions/CW1_submission.csv`
-  - Single-column CSV: `yhat`
+Output:
+
+- `submissions/model_comparison.csv`
+- columns include mean/std for 5-fold CV `R2` and `RMSE`
+
+(Run commands from the project root)
+    
