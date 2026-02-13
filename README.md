@@ -9,16 +9,19 @@ The goal is to predict `outcome` from the provided training data and generate a 
 ```text
 .
 |-- build_submission.py
-|-- CW1_eval_script.py
 |-- requirements.txt
 |-- README.md
+|-- src/
+|   |-- __init__.py
+|   |-- config.py
+|   |-- data_io.py
+|   `-- pipeline_factory.py
 |-- data/
 |   |-- CW1_train.csv
 |   `-- CW1_test.csv
-|-- submissions/
-|   `-- CW1_submission_K24060083.csv
 |-- notebooks/
 |   `-- eda.ipynb
+|-- submissions/
 `-- report/
     |-- report.tex
     `-- figures/
@@ -39,40 +42,23 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## How To Run
+## Fast Submission Run (Recommended)
 
-Run the training + tuning + submission pipeline:
+This is the CW submission path.
 
 ```bash
 python build_submission.py
 ```
 
-## What The Script Does
-
-`build_submission.py` performs the full end-to-end process:
-
-1. Loads data from `data/CW1_train.csv` and `data/CW1_test.csv`.
-2. Builds a leakage-safe sklearn `Pipeline`:
-   - numeric median imputation
-   - categorical most-frequent imputation
-   - categorical ordinal encoding
-   - `HistGradientBoostingRegressor`
-3. Computes baseline 5-fold CV R2.
-4. Runs stage-1 broad hyperparameter search (`RandomizedSearchCV`).
-5. Runs stage-2 tighter search around stage-1 best parameters.
-6. Selects the better stage automatically.
-7. Fits the selected pipeline on all training rows.
-8. Predicts test-set outcomes and saves submission.
-
-## Output File
-
-After each run:
+Output:
 
 - `submissions/CW1_submission_K24060083.csv`
-  - Single-column CSV: `yhat`
+- single column: `yhat`
 
-## Notes On Evaluation
+Run commands from the project root (the folder containing `build_submission.py`).
+
+## Notes
 
 - The provided test file does not include true outcomes.
-- Local performance is estimated using cross-validation R2 on training data.
-- Final performance is determined externally when the submission is evaluated with hidden outcomes.
+- Final marks depend on hidden test outcomes used by the coursework evaluator.
+- Examiner path: run `python build_submission.py`, then verify `submissions/CW1_submission_K24060083.csv` has one column named `yhat`.
