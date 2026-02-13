@@ -55,4 +55,18 @@ Output:
 - `submissions/CW1_submission_K24060083.csv`
 - single column: `yhat`
 
+## Run model comparison (for report evidence)
+
+Use this to generate a cross-validated comparison table across multiple model families.
+
+```bash
+python compare_models.py
+```
+
+Output:
+
+- `submissions/model_comparison.csv`
+- columns include mean/std for 5-fold CV `R2` and `RMSE`
+
 (Run commands from the project root)
+    
