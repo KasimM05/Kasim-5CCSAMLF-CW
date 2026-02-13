@@ -42,7 +42,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Fast Submission Run (Recommended)
+## Run the script to generate submission: 
 
 This is the CW submission path.
 
@@ -55,10 +55,4 @@ Output:
 - `submissions/CW1_submission_K24060083.csv`
 - single column: `yhat`
 
-Run commands from the project root (the folder containing `build_submission.py`).
-
-## Notes
-
-- The provided test file does not include true outcomes.
-- Final marks depend on hidden test outcomes used by the coursework evaluator.
-- Examiner path: run `python build_submission.py`, then verify `submissions/CW1_submission_K24060083.csv` has one column named `yhat`.
+(Run commands from the project root)
