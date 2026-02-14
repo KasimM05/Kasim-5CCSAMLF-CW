@@ -27,6 +27,8 @@ The goal is to predict `outcome` from the provided training data and generate a 
 `-- report/
     |-- main.tex
     `-- figures/
+        |-- corr_heatmap.png
+        `-- target_dist.png
 ```
 
 ## Environment Setup
