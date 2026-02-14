@@ -12,6 +12,7 @@ The goal is to predict `outcome` from the provided training data and generate a 
 |-- build_submission.py
 |-- requirements.txt
 |-- README.md
+|-- .gitignore
 |-- src/
 |   |-- __init__.py
 |   |-- config.py
