@@ -31,16 +31,22 @@ The goal is to predict `outcome` from the provided training data and generate a 
 
 ## Environment Setup
 
+Python version: `3.11` (tested with `3.11.9`).
+
 1. Create and activate a virtual environment (recommended).
 
 ```bash
 python -m venv .venv
+# macOS/Linux
 source .venv/bin/activate
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
 ```
 
 2. Install dependencies.
 
 ```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
