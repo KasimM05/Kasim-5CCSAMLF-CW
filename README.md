@@ -56,7 +56,7 @@ Output:
 - `submissions/CW1_submission_K24060083.csv`
 - single column: `yhat`
 
-## Run model comparison (for report evidence)
+## Run model comparison
 
 Use this to generate a cross-validated comparison table across multiple model families.
 
