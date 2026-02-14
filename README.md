@@ -33,14 +33,13 @@ The goal is to predict `outcome` from the provided training data and generate a 
 
 Python version: `3.11` (tested with `3.11.9`).
 
-1. Create and activate a virtual environment (recommended).
+1. Clone the repo, then create and activate a virtual environment (recommended).
 
 ```bash
+git clone https://github.com/KasimM05/Kasim-5CCSAMLF-CW.git
+cd Kasim-5CCSAMLF-CW
 python -m venv .venv
-# macOS/Linux
 source .venv/bin/activate
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
 ```
 
 2. Install dependencies.
