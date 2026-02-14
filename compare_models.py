@@ -19,6 +19,7 @@ def make_pipeline(model) -> Pipeline:
 
 
 def main() -> None:
+    print("Creating submission and table, this may take a few mins...")
     X, y, _ = load_train_test()
 
     cv = KFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
